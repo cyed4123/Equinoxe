@@ -1,6 +1,11 @@
- services:
+services:
   - type: web
-    name: cool-site
-    env: node
+    name: equinoxe
+    runtime: node
     plan: free
-    startCommand: npm install && npm start
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
