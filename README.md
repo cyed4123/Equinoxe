@@ -20,15 +20,15 @@ Equinox is usually updated every month, depending on the size of the update. See
 ## Deployment
 
 > [!NOTE]
-> You **cannot** deploy to static hosts, including Netlify, Cloudflare Pages, and GitHub Pages.
+> Equinox needs a long-lived Node process that can hold WebSocket upgrades, so static hosts (Netlify, Cloudflare Pages, GitHub Pages) and serverless platforms (Vercel, Netlify Functions) do **not** work.
 
-Deploy Equinox using the following services, or deploy locally with the local deployment button.
+Deploy Equinox using one of the following, or run it locally with `npm install && npm start` (defaults to `http://localhost:3000`; set `PORT` to override).
 <br>
-[![Deploy with Vercel](https://binbashbanana.github.io/deploy-buttons/buttons/remade/vercel.svg)](https://vercel.com/new/clone?repositoryurl=https://github.com/wrndxyz/Equinox)
-[![Deploy with Render](https://binbashbanana.github.io/deploy-buttons/buttons/remade/render.svg)](https://render.com/deploy?repo=https://github.com/wrndxyz/Equinox)
-[![Deploy with Heroku](https://binbashbanana.github.io/deploy-buttons/buttons/remade/heroku.svg)](https://heroku.com/deploy/?template=https://github.com/wrndxyz/Equinox)
-[![Deploy with Koyeb](https://binbashbanana.github.io/deploy-buttons/buttons/remade/koyeb.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/wrndxyz/Equinox)
-[![Deploy locally](https://raw.githubusercontent.com/wrndxyz/cdn/main/assets/localdeply_3.png)](https://github.com/wrndxyz/Equinox/wiki/Local-Deployment-Guide)
+[![Deploy with Render](https://binbashbanana.github.io/deploy-buttons/buttons/remade/render.svg)](https://render.com/deploy?repo=https://github.com/cyed4123/Equinoxe)
+[![Deploy with Heroku](https://binbashbanana.github.io/deploy-buttons/buttons/remade/heroku.svg)](https://heroku.com/deploy/?template=https://github.com/cyed4123/Equinoxe)
+[![Deploy with Koyeb](https://binbashbanana.github.io/deploy-buttons/buttons/remade/koyeb.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/cyed4123/Equinoxe)
+
+A Dockerfile is included for any container host. It listens on `PORT` (default `3000`) and serves `/healthz` for platform health checks.
 
 ## Join the Discord for links!
 [![Discord](https://invidget.switchblade.xyz/H7JqRwykhk?theme=dark)](https://discord.gg/H7JqRwykhk)
