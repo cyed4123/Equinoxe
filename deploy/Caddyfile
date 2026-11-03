@@ -1,0 +1,5 @@
+# Automatic HTTPS, and WebSocket upgrades are proxied without extra config.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy equinox:3000
+}
