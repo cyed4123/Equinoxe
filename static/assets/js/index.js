@@ -89,44 +89,45 @@ function updateTabTitle(tabNumber, iframe) {
     }
 }
 
-document.getElementById('form').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const searchValue = document.getElementById('search').value;
-    go(searchValue);
-});
-
+// main.js submits the omnibox, so this only decides where the active tab goes.
+// It must go through the proxy: setting the iframe to the raw URL loads the site
+// straight into the frame, where it refuses to render and bypasses the worker.
 function go(searchValue) {
-    console.log(`Navigating to ${searchValue} in tab ${activeTab}`);
-    const activeIframe = document.querySelector(`#iframe-container iframe[data-tab="${activeTab}"]`);
-    let finalUrl = searchValue;
-
-    if (searchValue === 'eq://search') {
-        finalUrl = 'https://v3.wrnd.lat/search.html';
-    } else if (searchValue.includes('search.html')) {
-        finalUrl = 'eq://search';
-    } else {
-        originalUrls[activeTab] = searchValue; // Save the original URL
-    }
-
-    activeIframe.src = finalUrl;
-    activeIframe.onload = function () {
-        updateURLBar(activeIframe.src, activeTab);
-        updateTabTitle(activeTab, activeIframe);
-    };
-}
-
-// Initial check and URL adjustment when the script loads
-function URLCheck() {
-    console.log(`Running initial URL check for tab ${activeTab}`);
     const activeIframe = document.querySelector(`#iframe-container iframe[data-tab="${activeTab}"]`);
     if (!activeIframe) return;
 
-    const currentURL = activeIframe.src;
-    if (currentURL.includes('search.html')) {
-        activeIframe.src = 'eq://search';
-    } else if (currentURL === 'eq://search') {
-        activeIframe.src = 'https://v3.wrnd.lat/search.html';
+    const value = (searchValue || '').trim();
+    if (!value || value === 'eq://search' || value.includes('search.html')) {
+        activeIframe.src = '/search.html';
+        return;
     }
+
+    const proxied = proxyUrlFor(value);
+    if (!proxied) return;
+
+    originalUrls[activeTab] = value; // Save the original URL
+
+    registerSW().then(worker => {
+        if (!worker) {
+            alert('This browser is blocking service workers (private window?), which the proxy needs. Try another browser.');
+            return;
+        }
+
+        activeIframe.src = proxied;
+        activeIframe.onload = function () {
+            updateURLBar(proxied, activeTab);
+            updateTabTitle(activeTab, activeIframe);
+        };
+    });
+}
+
+// `eq://search` is a label for the omnibox only. Setting it as an iframe src
+// used to navigate the tab to a URL that cannot load and blank the frame.
+function URLCheck() {
+    const activeIframe = document.querySelector(`#iframe-container iframe[data-tab="${activeTab}"]`);
+    if (!activeIframe) return;
+
+    updateURLBar(activeIframe.src, activeTab);
 }
 
 // Run the initial URL check on page load
