@@ -20,39 +20,81 @@
             text-align: center;
             padding: 24px;
         }
+
+        .wrap {
+            max-width: 34rem;
+        }
+
+        .detail {
+            margin-top: 1.25rem;
+            font-size: 12px;
+            line-height: 1.6;
+            opacity: 0.55;
+            word-break: break-word;
+        }
+
+        a {
+            color: #8ab4f8;
+        }
     </style>
 </head>
 
 <body>
-    <p id="status">Starting the proxy…</p>
+    <div class="wrap">
+        <p id="status">Starting the proxy…</p>
+        <p class="detail" id="detail"></p>
+        <p class="detail"><a href="/">Open the homepage</a></p>
+    </div>
     <script>
-        // A proxied URL was opened directly (hard refresh, private window), so the
-        // service worker that normally answers /edu/* is not running yet.
+        // A proxied URL was opened directly (hard refresh, new tab, private window),
+        // so the service worker that normally answers /edu/* is not running yet.
         // Register it, then reload so the worker takes over the request.
         (async function () {
             const status = document.getElementById('status');
+            const detail = document.getElementById('detail');
             const key = 'equinox||edu-boot';
 
-            if (!('serviceWorker' in navigator)) {
-                status.textContent = 'This browser does not support service workers, which the proxy needs.';
+            const attempts = {
+                read() { try { return Number(sessionStorage.getItem(key) || 0); } catch (e) { return 0; } },
+                write(n) { try { sessionStorage.setItem(key, n); } catch (e) { /* storage blocked */ } },
+                clear() { try { sessionStorage.removeItem(key); } catch (e) { /* storage blocked */ } },
+            };
+
+            const hasWorkerApi = 'serviceWorker' in navigator;
+            const controlled = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+
+            // Shown in every outcome, so a stuck page reports why instead of guessing.
+            detail.textContent = [
+                'secure context: ' + (window.isSecureContext ? 'yes' : 'no'),
+                'service worker API: ' + (hasWorkerApi ? 'available' : 'missing'),
+                'worker controlling this page: ' + (controlled ? 'yes' : 'no'),
+            ].join(' · ');
+
+            if (!window.isSecureContext) {
+                status.textContent = 'This page must be opened over HTTPS for the proxy to start.';
                 return;
             }
 
-            const attempts = Number(sessionStorage.getItem(key) || 0);
-            if (attempts >= 2) {
-                sessionStorage.removeItem(key);
-                status.textContent = 'The proxy could not start. Open the homepage and try again.';
+            if (!hasWorkerApi) {
+                status.textContent = 'This browser profile is blocking service workers, which the proxy needs. Leave private/incognito mode, allow cookies for this site, and reload — or use a different browser.';
+                return;
+            }
+
+            const so_far = attempts.read();
+            if (so_far >= 2) {
+                attempts.clear();
+                status.textContent = 'The proxy could not start after two attempts. Open the homepage and try again.';
                 return;
             }
 
             try {
-                sessionStorage.setItem(key, attempts + 1);
+                attempts.write(so_far + 1);
                 await navigator.serviceWorker.register('/sw.js', { scope: '/edu/' });
                 await navigator.serviceWorker.ready;
                 location.reload();
             } catch (error) {
-                sessionStorage.removeItem(key);
-                status.textContent = 'The proxy could not start: ' + error.message;
+                attempts.clear();
+                status.textContent = 'The proxy could not start: ' + (error && error.message ? error.message : error);
             }
         })();
     </script>
