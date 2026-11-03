@@ -2,22 +2,36 @@ const msg = document.getElementById("m");
 const frame = document.getElementById("ifr");
 const loadingScreen = document.getElementById("loadingScreen");
 
-function searchurl(url) {
+function searchEngineUrl(query) {
+    const q = encodeURIComponent(query);
     switch (localStorage.getItem("equinox||search")) {
         case "ddg":
-            proxy(`https://duckduckgo.com/?q=${url}`);
-            break;
+            return `https://duckduckgo.com/?q=${q}`;
         case "brave":
-            proxy(`https://search.brave.com/search?q=${url}`);
-            break;
+            return `https://search.brave.com/search?q=${q}`;
         case "yahoo":
-            proxy(`https://search.yahoo.com/search?p=${url}`);
-            break;
+            return `https://search.yahoo.com/search?p=${q}`;
         default:
         case "google":
-            proxy(`https://www.google.com/search?q=${url}`);
-            break;
+            return `https://www.google.com/search?q=${q}`;
     }
+}
+
+// Turn whatever the user typed into a URL the service worker can serve.
+function proxyUrlFor(input) {
+    const value = (input || "").trim();
+    if (!value) return null;
+
+    if (isUrl(value)) {
+        const url = /^https?:\/\//i.test(value) ? value : "https://" + value;
+        return resolveURL(url);
+    }
+
+    return resolveURL(searchEngineUrl(value));
+}
+
+function searchurl(url) {
+    proxy(searchEngineUrl(url));
 }
 
 function go(url) {
